@@ -45,29 +45,80 @@ const Gameboard = (function gameboard() {
         board[row][column].setSign(sign);
     };
 
-    return { showBoardInConsole, setSignForSquare }; // Probably a temporary thing
+    const getBoard = () => board;
+
+    return { showBoardInConsole, setSignForSquare, getBoard }; // Probably a temporary thing
 })();
 
-function playerFactory(name, sign) {
-    const getName = () => name;
-    const getSign = () => sign;
 
-    return { getName, getSign };
-}
-
-const playerOne = playerFactory("Player 1", "X");
-const playerTwo = playerFactory("Player 2", "O");
 
 const Gameflow = (function gameFlow() {
-    const playTurn = (row, column, player) => {
+    // At some point I started to realize that the 2D array might be more trouble than it's worth, as it's hard to abstractly reference a cell
+    // But, this is a workaround that lets me keep doing 2D... 1D might have been more efficient
+    const [topLeft, top, topRight, left, middle, right, bottomLeft, bottom, bottomRight] = (function () {
+        let final = [];
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                final.push({ row: i, column: j });
+            }
+        }
+        return final;
+    })();
+
+    //Players only need to exist in the context of the gameflow
+    function playerFactory(name, sign) {
+        const getName = () => name;
+        const getSign = () => sign;
+
+        return { getName, getSign };
+    }
+
+    const playerOne = playerFactory("Player 1", "X");
+    const playerTwo = playerFactory("Player 2", "O");
+
+    // We need a way to track the active player, starting with playerOne
+    let activePlayer = playerOne;
+    const getActivePlayer = () => activePlayer;
+
+    // The flow of turns
+    const switchPlayer = () => {
+        activePlayer = activePlayer === playerOne ? playerTwo : playerOne;
+    }
+
+    // Won't run the first turn; probably okay (could get around this by making this function part of the return but at this stage I'm not doing that)
+    const startTurn = () => {
+        Gameboard.showBoardInConsole();
+        console.log(getActivePlayer().getName() + "'s turn")
+    };
+
+    // Plays a turn for the active player; try-catch ensures we won't switch players if the move is invalid
+    const playTurn = (row, column) => {
         try {
-            Gameboard.setSignForSquare(row, column, player.getSign());
+            Gameboard.setSignForSquare(row, column, getActivePlayer().getSign());
+            switchPlayer();
         } catch (error) {
             if (error.message === "Square already assigned!") console.log(error.message);
             else throw error;
         }
-        Gameboard.showBoardInConsole();
+        startTurn();
+
     };
+    function checkWin() {
+        const board = Gameboard.getBoard();
+        const winConditions = [
+            [topLeft, top, topRight],
+            [left, middle, right],
+            [bottomLeft, bottom, bottomRight],
+            [topLeft, left, bottomLeft],
+            [top, middle, bottom],
+            [topRight, right, bottomRight],
+            [topLeft, middle, bottomRight],
+            [bottomLeft, middle, topRight]
+        ];
+        winConditions.some((condition) => {
+
+        });
+    }
 
     return { playTurn };
 })();
