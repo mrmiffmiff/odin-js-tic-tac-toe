@@ -38,7 +38,12 @@ const Gameboard = (function gameboard() {
             return shownRow;
         });
         console.log(shownBoard);
-    }
+    };
 
-    return { showBoardInConsole }; // Probably a temporary thing
+    // Setter to be used by the gameplay. Might need a try-catch block here, haven't decided yet.
+    const setSignForSquare = (row, column, sign) => {
+        board[row][column].setSign(sign);
+    };
+
+    return { showBoardInConsole, setSignForSquare }; // Probably a temporary thing
 })();
