@@ -47,3 +47,13 @@ const Gameboard = (function gameboard() {
 
     return { showBoardInConsole, setSignForSquare }; // Probably a temporary thing
 })();
+
+function playerFactory(name, sign) {
+    const getName = () => name;
+    const getSign = () => sign;
+
+    return { getName, getSign };
+}
+
+const playerOne = playerFactory("Player 1", "X");
+const playerTwo = playerFactory("Player 2", "O");
