@@ -57,3 +57,17 @@ function playerFactory(name, sign) {
 
 const playerOne = playerFactory("Player 1", "X");
 const playerTwo = playerFactory("Player 2", "O");
+
+const Gameflow = (function gameFlow() {
+    const playTurn = (row, column, player) => {
+        try {
+            Gameboard.setSignForSquare(row, column, player.getSign());
+        } catch (error) {
+            if (error.message === "Square already assigned!") console.log(error.message);
+            else throw error;
+        }
+        Gameboard.showBoardInConsole();
+    };
+
+    return { playTurn };
+})();
