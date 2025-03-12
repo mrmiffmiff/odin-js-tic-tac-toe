@@ -31,5 +31,14 @@ const Gameboard = (function gameboard() {
         }
     }
 
-    return { board }; // Probably a temporary thing
+    // A getter for the whole board
+    const showBoardInConsole = () => {
+        let shownBoard = board.map((row) => {
+            let shownRow = row.map((square) => square.getSign());
+            return shownRow;
+        });
+        console.log(shownBoard);
+    }
+
+    return { showBoardInConsole }; // Probably a temporary thing
 })();
