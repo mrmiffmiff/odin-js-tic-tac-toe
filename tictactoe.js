@@ -22,7 +22,7 @@ const Gameboard = (function gameboard() {
                 // Getters and setters
                 const getSign = () => sign;
                 const setSign = (playerSign) => {
-                    if (sign != "") throw new Error("Square already assigned!"); // We can catch this in the gameboard or gameflow (haven't decided as of this comment)
+                    if (sign != "" && playerSign != "") throw new Error("Square already assigned!");
                     sign = playerSign;
                 }
 
@@ -33,11 +33,10 @@ const Gameboard = (function gameboard() {
 
     // A getter for the whole board
     const showBoardInConsole = () => {
-        let shownBoard = board.map((row) => {
+        board.forEach((row) => {
             let shownRow = row.map((square) => square.getSign());
-            return shownRow;
+            console.log(shownRow);
         });
-        console.log(shownBoard);
     };
 
     // Setter to be used by the gameplay. Might need a try-catch block here, haven't decided yet.
@@ -47,7 +46,15 @@ const Gameboard = (function gameboard() {
 
     const getBoard = () => board;
 
-    return { showBoardInConsole, setSignForSquare, getBoard }; // Probably a temporary thing
+    const resetBoard = function () {
+        for (const row of board) {
+            for (const square of row) {
+                square.setSign('');
+            }
+        }
+    }
+
+    return { showBoardInConsole, setSignForSquare, getBoard, resetBoard }; // Probably a temporary thing
 })();
 
 
@@ -85,6 +92,14 @@ const Gameflow = (function gameFlow() {
         activePlayer = activePlayer === playerOne ? playerTwo : playerOne;
     }
 
+    // Will be set to true when someone wins or the game is tied to prevent certain events
+    // Will be set back to false if game is restarted
+    let gameOver = false;
+
+    /* Game can only be won after at least 5 moves (by then the first player has gone 3 times).
+     * Additionally, can only reach 9 moves total (9 squares), at which we know it's a tie if not a win */
+    let turnsTaken = 0;
+
     // Won't run the first turn; probably okay (could get around this by making this function part of the return but at this stage I'm not doing that)
     const startTurn = () => {
         Gameboard.showBoardInConsole();
@@ -95,13 +110,21 @@ const Gameflow = (function gameFlow() {
     const playTurn = (row, column) => {
         try {
             Gameboard.setSignForSquare(row, column, getActivePlayer().getSign());
-            if (checkWin()) console.log(`Congratulations. ${getActivePlayer().getName()} is the winner!`);
-            switchPlayer();
+            turnsTaken++;
+            if (turnsTaken >= 5 && checkWin()) {
+                console.log(`Congratulations. ${getActivePlayer().getName()} is the winner!`);
+                gameOver = true;
+            }
+            else if (turnsTaken >= 9) {
+                console.log("The game is tied!");
+                gameOver = true;
+            }
+            if (!gameOver) switchPlayer();
         } catch (error) {
             if (error.message === "Square already assigned!") console.log(error.message);
             else throw error;
         }
-        startTurn();
+        if (!gameOver) startTurn();
 
     };
     function checkWin() {
@@ -126,5 +149,13 @@ const Gameflow = (function gameFlow() {
         });
     }
 
-    return { playTurn };
+    function reset() {
+        Gameboard.resetBoard();
+        gameOver = false;
+        turnsTaken = 0;
+        activePlayer = playerOne;
+        startTurn();
+    }
+
+    return { playTurn, reset };
 })();
