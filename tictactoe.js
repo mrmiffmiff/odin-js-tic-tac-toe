@@ -9,6 +9,7 @@ function boardSquare() {
     // Getters and setters
     const getSign = () => sign;
     const setSign = (playerSign) => {
+        if (sign != "") throw new Error("Square already assigned!"); // We can catch this in the gameboard or gameflow (haven't decided as of this comment)
         sign = playerSign;
     }
 
