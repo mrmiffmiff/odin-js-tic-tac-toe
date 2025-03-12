@@ -95,6 +95,7 @@ const Gameflow = (function gameFlow() {
     const playTurn = (row, column) => {
         try {
             Gameboard.setSignForSquare(row, column, getActivePlayer().getSign());
+            if (checkWin()) console.log(`Congratulations. ${getActivePlayer().getName()} is the winner!`);
             switchPlayer();
         } catch (error) {
             if (error.message === "Square already assigned!") console.log(error.message);
@@ -115,8 +116,13 @@ const Gameflow = (function gameFlow() {
             [topLeft, middle, bottomRight],
             [bottomLeft, middle, topRight]
         ];
-        winConditions.some((condition) => {
-
+        return winConditions.some((condition) => {
+            let possibleWin = [];
+            for (const square of condition) {
+                if (board[square.row][square.column].getSign() === getActivePlayer().getSign())
+                    possibleWin.push(square);
+            }
+            return possibleWin.length === 3;
         });
     }
 
