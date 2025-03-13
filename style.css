@@ -1,0 +1,63 @@
+/* I admit that some styling choices (namely fonts and colors) came from an LLM. I think they work well enough though. */
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+}
+
+.headerContainer {
+    margin-bottom: 15px;
+}
+
+h1 {
+    color: #333333;
+    font-size: 2.5em;
+}
+
+.container {
+    text-align: center;
+    background-color: #ffffff;
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    min-width: min-content;
+    min-height: min-content;
+    width: 30vw;
+    height: 30vh;
+}
+
+.status {
+    color: #555555;
+    margin-bottom: 20px;
+    font-size: 1.2em;
+}
+
+.board {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(70px, 1fr));
+    grid-template-rows: repeat(3, minmax(70px, 1fr));
+    gap: 5px;
+    background-color: #333333;
+    padding: 5px;
+    border-radius: 10px;
+    aspect-ratio: 1/1;
+}
+
+.square {
+    background-color: #ffffff;
+    border-radius: 5px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+.square:hover {
+    background-color: #f0f0f0;
+}
