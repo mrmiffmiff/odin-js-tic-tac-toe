@@ -96,20 +96,25 @@ const Gameflow = (function gameFlow() {
     // Will be set back to false if game is restarted
     let gameOver = false;
 
+    const standardStatus = () => getActivePlayer().getName() + "'s turn";
+
     /* Game can only be won after at least 5 moves (by then the first player has gone 3 times).
      * Additionally, can only reach 9 moves total (9 squares), at which we know it's a tie if not a win */
     let turnsTaken = 0;
 
     // Won't run the first turn; probably okay (could get around this by making this function part of the return but at this stage I'm not doing that)
-    const startTurn = () => {
-        Gameboard.showBoardInConsole();
-        console.log(getActivePlayer().getName() + "'s turn")
+    const startTurn = (unusualMessage = "") => {
+        let gameStatus = unusualMessage === "" ? standardStatus() : unusualMessage + " " + standardStatus();
+        Screenflow.updateStatus(gameStatus);
+        Screenflow.drawBoard();
     };
 
     // Plays a turn for the active player; try-catch ensures we won't switch players if the move is invalid
     const playTurn = (row, column) => {
+        let unusualMessage;
         try {
             Gameboard.setSignForSquare(row, column, getActivePlayer().getSign());
+            Screenflow.drawBoard();
             turnsTaken++;
             if (turnsTaken >= 5 && checkWin()) {
                 console.log(`Congratulations. ${getActivePlayer().getName()} is the winner!`);
@@ -121,10 +126,12 @@ const Gameflow = (function gameFlow() {
             }
             if (!gameOver) switchPlayer();
         } catch (error) {
-            if (error.message === "Square already assigned!") console.log(error.message);
+            if (error.message === "Square already assigned!") {
+                unusualMessage = error.message;
+            }
             else throw error;
         }
-        if (!gameOver) startTurn();
+        if (!gameOver) startTurn(unusualMessage);
 
     };
     function checkWin() {
@@ -159,3 +166,39 @@ const Gameflow = (function gameFlow() {
 
     return { playTurn, reset };
 })();
+
+const Screenflow = (function screenFlow() {
+    const board = Gameboard.getBoard();
+    const boardDiv = document.querySelector(".board");
+
+    const statusDiv = document.querySelector(".status");
+
+    const updateStatus = (statusMessage) => {
+        statusDiv.textContent = statusMessage;
+    }
+
+    const clear = () => {
+        const squares = boardDiv.querySelectorAll(".square");
+        squares.forEach((square) => {
+            boardDiv.removeChild(square);
+        })
+    }
+
+    const drawBoard = () => {
+        clear();
+        for (let row = 0; row < 3; row++) {
+            for (let column = 0; column < 3; column++) {
+                let square = document.createElement("button");
+                square.classList.add("square")
+                square.setAttribute("type", "button");
+                square.setAttribute("dataRow", `${row}`);
+                square.setAttribute("dataColumn", `${column}`);
+                square.textContent = board[row][column].getSign();
+                boardDiv.appendChild(square);
+            }
+        }
+    }
+    return { drawBoard, updateStatus };
+})();
+
+Gameflow.reset();
