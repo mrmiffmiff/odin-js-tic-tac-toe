@@ -117,11 +117,11 @@ const Gameflow = (function gameFlow() {
             Screenflow.drawBoard();
             turnsTaken++;
             if (turnsTaken >= 5 && checkWin()) {
-                console.log(`Congratulations. ${getActivePlayer().getName()} is the winner!`);
+                Screenflow.updateStatus(`Congratulations. ${getActivePlayer().getName()} is the winner!`);
                 gameOver = true;
             }
             else if (turnsTaken >= 9) {
-                console.log("The game is tied!");
+                Screenflow.updateStatus("The game is tied!");
                 gameOver = true;
             }
             if (!gameOver) switchPlayer();
@@ -132,6 +132,7 @@ const Gameflow = (function gameFlow() {
             else throw error;
         }
         if (!gameOver) startTurn(unusualMessage);
+        else Screenflow.stopGame();
 
     };
     function checkWin() {
@@ -191,14 +192,28 @@ const Screenflow = (function screenFlow() {
                 let square = document.createElement("button");
                 square.classList.add("square")
                 square.setAttribute("type", "button");
-                square.setAttribute("dataRow", `${row}`);
-                square.setAttribute("dataColumn", `${column}`);
+                square.setAttribute("data-Row", `${row}`);
+                square.setAttribute("data-Column", `${column}`);
                 square.textContent = board[row][column].getSign();
+                square.addEventListener('click', clickSquare);
                 boardDiv.appendChild(square);
             }
         }
     }
-    return { drawBoard, updateStatus };
+
+    function clickSquare(e) {
+        let row = parseInt(e.target.dataset.row);
+        let column = parseInt(e.target.dataset.column);
+        Gameflow.playTurn(row, column);
+    }
+
+    function stopGame() {
+        const squares = boardDiv.querySelectorAll(".square");
+        squares.forEach((square) => {
+            square.removeEventListener('click', clickSquare);
+        })
+    }
+    return { drawBoard, updateStatus, stopGame };
 })();
 
 Gameflow.reset();
