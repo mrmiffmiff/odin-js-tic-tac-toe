@@ -224,6 +224,12 @@ const Screenflow = (function screenFlow() {
             square.removeEventListener('click', clickSquare);
         })
     }
+
+    const resetButton = document.querySelector('.restart');
+    resetButton.addEventListener('click', (e) => {
+        Gameflow.reset();
+    });
+
     return { drawBoard, updateStatus, stopGame };
 })();
 

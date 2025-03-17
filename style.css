@@ -14,11 +14,19 @@ body {
 
 .headerContainer {
     margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
 }
 
 h1 {
     color: #333333;
     font-size: 2.5em;
+    margin-bottom: 0.5em;
+}
+
+.restart {
+    background-color: #848181;
+    color: beige;
 }
 
 .container {
