@@ -22,6 +22,8 @@ const Gameboard = (function gameboard() {
                 // Getters and setters
                 const getSign = () => sign;
                 const setSign = (playerSign) => {
+                    /* If sign is not empty, that means that square is already played to.
+                     * If playerSign IS empty, that means this is a game reset, so this needs to go through also. */
                     if (sign != "" && playerSign != "") throw new Error("Square already assigned!");
                     sign = playerSign;
                 }
@@ -31,21 +33,15 @@ const Gameboard = (function gameboard() {
         }
     }
 
-    // A getter for the whole board
-    const showBoardInConsole = () => {
-        board.forEach((row) => {
-            let shownRow = row.map((square) => square.getSign());
-            console.log(shownRow);
-        });
-    };
-
     // Setter to be used by the gameplay. Might need a try-catch block here, haven't decided yet.
     const setSignForSquare = (row, column, sign) => {
         board[row][column].setSign(sign);
     };
 
+    // Both the Game and Screen controllers need to be able to check game state
     const getBoard = () => board;
 
+    // Essentially a helper function for resetting the game; otherthe Gameboard should only be written to by itself
     const resetBoard = function () {
         for (const row of board) {
             for (const square of row) {
@@ -54,14 +50,15 @@ const Gameboard = (function gameboard() {
         }
     }
 
-    return { showBoardInConsole, setSignForSquare, getBoard, resetBoard }; // Probably a temporary thing
+    return { setSignForSquare, getBoard, resetBoard };
 })();
 
 
 
 const Gameflow = (function gameFlow() {
     // At some point I started to realize that the 2D array might be more trouble than it's worth, as it's hard to abstractly reference a cell
-    // But, this is a workaround that lets me keep doing 2D... 1D might have been more efficient
+    // But, this is a workaround that lets me keep doing 2D... 1D might have been more efficient, as now I essentially need both, but
+    // I still like representing the board itself as a 2D array. But maybe someday I'll clean it all up.
     const [topLeft, top, topRight, left, middle, right, bottomLeft, bottom, bottomRight] = (function () {
         let final = [];
         for (let i = 0; i < 3; i++) {
@@ -96,31 +93,47 @@ const Gameflow = (function gameFlow() {
     // Will be set back to false if game is restarted
     let gameOver = false;
 
+    // Just a shorthand for convenience
     const standardStatus = () => getActivePlayer().getName() + "'s turn";
 
     /* Game can only be won after at least 5 moves (by then the first player has gone 3 times).
      * Additionally, can only reach 9 moves total (9 squares), at which we know it's a tie if not a win */
     let turnsTaken = 0;
 
-    // Won't run the first turn; probably okay (could get around this by making this function part of the return but at this stage I'm not doing that)
+    // Puts everything into default states then "prompts" for gameplay
+    function reset() {
+        Gameboard.resetBoard();
+        gameOver = false;
+        turnsTaken = 0;
+        activePlayer = playerOne;
+        startTurn();
+    }
+
+    // Makes sure it's clear what turn it is, and if the previous turn attempt was invalid
     const startTurn = (unusualMessage = "") => {
+        // Necessary to draw board here for the initial state and for a reset
+        Screenflow.drawBoard();
         let gameStatus = unusualMessage === "" ? standardStatus() : unusualMessage + " " + standardStatus();
         Screenflow.updateStatus(gameStatus);
-        Screenflow.drawBoard();
     };
 
-    // Plays a turn for the active player; try-catch ensures we won't switch players if the move is invalid
+    // Plays a turn for the active player; try-catch ensures we won't switch players if the move is invalid.
+    // Unusual Message will ensure the player knows their move was bad.
+    // The turn counter helps with short-circuiting the win-tracking and also helps checking ties.
+    // Board is redrawn with every move; this may not be the most performant, but it does keep the game logic tighter
     const playTurn = (row, column) => {
         let unusualMessage;
         try {
             Gameboard.setSignForSquare(row, column, getActivePlayer().getSign());
-            Screenflow.drawBoard();
+            // I could call draw board here, but that would be redundant if the game's not over. So it's handled selectively.
             turnsTaken++;
             if (turnsTaken >= 5 && checkWin()) {
+                Screenflow.drawBoard();
                 Screenflow.updateStatus(`Congratulations. ${getActivePlayer().getName()} is the winner!`);
                 gameOver = true;
             }
             else if (turnsTaken >= 9) {
+                Screenflow.drawBoard();
                 Screenflow.updateStatus("The game is tied!");
                 gameOver = true;
             }
@@ -135,6 +148,8 @@ const Gameflow = (function gameFlow() {
         else Screenflow.stopGame();
 
     };
+
+    // Like I said above, it's a little ridiculous, but it does work.
     function checkWin() {
         const board = Gameboard.getBoard();
         const winConditions = [
@@ -157,23 +172,17 @@ const Gameflow = (function gameFlow() {
         });
     }
 
-    function reset() {
-        Gameboard.resetBoard();
-        gameOver = false;
-        turnsTaken = 0;
-        activePlayer = playerOne;
-        startTurn();
-    }
-
     return { playTurn, reset };
 })();
 
+// This is purely about updating the screen.
 const Screenflow = (function screenFlow() {
+    // I think having a personal representation of the board is more efficient than constantly calling getBoard
     const board = Gameboard.getBoard();
     const boardDiv = document.querySelector(".board");
-
     const statusDiv = document.querySelector(".status");
 
+    // Status area used for universal messages; Screenflow object has no control over types of messages, Gameflow determines
     const updateStatus = (statusMessage) => {
         statusDiv.textContent = statusMessage;
     }
@@ -192,6 +201,7 @@ const Screenflow = (function screenFlow() {
                 let square = document.createElement("button");
                 square.classList.add("square")
                 square.setAttribute("type", "button");
+                // Data attributes help bridge the gap between the visual board and the board object
                 square.setAttribute("data-Row", `${row}`);
                 square.setAttribute("data-Column", `${column}`);
                 square.textContent = board[row][column].getSign();
@@ -207,6 +217,7 @@ const Screenflow = (function screenFlow() {
         Gameflow.playTurn(row, column);
     }
 
+    // When reaching an endgame condition, we must remove interactivity (except the square highlighting on hover set in the CSS, which I see no reason to remove)
     function stopGame() {
         const squares = boardDiv.querySelectorAll(".square");
         squares.forEach((square) => {
